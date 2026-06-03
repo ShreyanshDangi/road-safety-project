@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Road Damage</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #2563eb;
+      --blue-dk: #1d4ed8;
+      --green:   #16a34a;
+      --red:     #dc2626;
+      --orange:  #d97706;
+      --gray-50: #f9fafb;
+      --gray-100:#f3f4f6;
+      --gray-200:#e5e7eb;
+      --gray-400:#9ca3af;
+      --gray-500:#6b7280;
+      --gray-700:#374151;
+      --gray-900:#111827;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    header {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--blue);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo svg { width: 20px; height: 20px; }
+
+    header h1 { font-size: 17px; font-weight: 600; }
+    header p  { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+    .container {
+      max-width: 560px;
+      margin: 32px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title .step {
+      width: 24px; height: 24px;
+      background: var(--blue);
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* GPS Status Bar */
+    .gps-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      background: var(--gray-100);
+      color: var(--gray-500);
+      transition: all 0.3s;
+    }
+
+    .gps-bar.acquiring { background: #eff6ff; color: #2563eb; }
+    .gps-bar.acquired  { background: #f0fdf4; color: #16a34a; }
+    .gps-bar.failed    { background: #fef2f2; color: #dc2626; }
+
+    .gps-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .gps-dot.pulse {
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* Photo upload */
+    .upload-zone {
+      border: 2px dashed var(--gray-200);
+      border-radius: 12px;
+      padding: 32px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover { border-color: var(--blue); background: #eff6ff; }
+    .upload-zone.has-image { padding: 0; border-style: solid; overflow: hidden; }
+
+    .upload-zone img {
+      width: 100%;
+      max-height: 260px;
+      object-fit: cover;
+      display: block;
+      border-radius: 10px;
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+
+    .upload-zone p {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+
+    .upload-zone p strong {
+      color: var(--blue);
+    }
+
+    .change-photo-btn {
+      position: absolute;
+      bottom: 10px; right: 10px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+
+    label .optional {
+      font-weight: 400;
+      color: var(--gray-400);
+      margin-left: 4px;
+    }
+
+    select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: white;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .submit-btn:hover:not(:disabled) { background: var(--blue-dk); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result card */
+    .result-card {
+      border-radius: 16px;
+      padding: 24px;
+      display: none;
+    }
+
+    .result-card.success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      display: block;
+    }
+
+    .result-card.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      display: block;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .result-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .result-icon.success { background: #dcfce7; }
+    .result-icon.error   { background: #fee2e2; }
+
+    .result-header h3 { font-size: 16px; font-weight: 600; }
+    .result-header p  { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+
+    .complaint-id-box {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .complaint-id-box span {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .complaint-id-box code {
+      font-size: 12px;
+      color: var(--gray-700);
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--gray-200);
+      border-radius: 7px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--gray-600);
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover { background: var(--gray-100); }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .result-item {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .result-item .label {
+      font-size: 11px;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .result-item .value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .result-item .value.high   { color: var(--red); }
+    .result-item .value.medium { color: var(--orange); }
+    .result-item .value.low    { color: var(--green); }
+
+    .address-box {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--gray-700);
+      line-height: 1.5;
+    }
+
+    .address-box .label {
+      font-size: 11px;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    /* Status tracker */
+    .tracker-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .tracker-row input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: monospace;
+    }
+
+    .tracker-row input:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    .track-btn {
+      padding: 10px 18px;
+      background: var(--gray-900);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .track-btn:hover { background: var(--gray-700); }
+
+    .status-result {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status-result.show { display: block; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.PENDING     { background: #fef3c7; color: #92400e; }
+    .status-badge.IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+    .status-badge.RESOLVED    { background: #dcfce7; color: #166534; }
+    .status-badge.FLAGGED     { background: #fee2e2; color: #991b1b; }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 13px;
+    }
+
+    .status-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .status-row .key { color: var(--gray-500); }
+    .status-row .val { font-weight: 500; }
+
+    /* Flags */
+    .flags {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .flag-item {
+      font-size: 11px;
+      color: var(--gray-500);
+      padding: 4px 8px;
+      background: var(--gray-100);
+      border-radius: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .result-grid { grid-template-columns: 1fr; }
+      .container { margin: 16px auto; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+  </div>
+  <div>
+    <h1>Report Road Damage</h1>
+    <p>Citizen Complaint Portal — Road Safety System</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- GPS Status -->
+  <div class="gps-bar acquiring" id="gpsBar">
+    <div class="gps-dot pulse" id="gpsDot"></div>
+    <span id="gpsText">Acquiring your location…</span>
+  </div>
+
+  <!-- Result (shown after submit) -->
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="result-icon" id="resultIcon"></div>
+      <div>
+        <h3 id="resultTitle"></h3>
+        <p id="resultSub"></p>
+      </div>
+    </div>
+    <div id="resultBody"></div>
+  </div>
+
+  <!-- Photo Upload -->
+  <div class="card">
+    <div class="card-title">
+      <div class="step">1</div>
+      Upload Road Photo
+    </div>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="imageInput" accept="image/*" capture="environment" />
+      <div id="uploadPlaceholder">
+        <div class="upload-icon">📷</div>
+        <p><strong>Tap to take a photo</strong> or upload from gallery</p>
+        <p style="margin-top:6px;font-size:12px;">JPG, PNG — max 15MB</p>
+      </div>
+      <img id="imagePreview" style="display:none;" />
+      <button class="change-photo-btn" id="changePhotoBtn" style="display:none">
+        Change photo
+      </button>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="card">
+    <div class="card-title">
+      <div class="step">2</div>
+      Complaint Details
+    </div>
+
+    <div class="field">
+      <label for="roadType">Road Type</label>
+      <select id="roadType">
+        <option value="city_road">City Road</option>
+        <option value="state_highway">State Highway</option>
+        <option value="national_highway">National Highway</option>
+        <option value="major_district_road">Major District Road</option>
+        <option value="rural_road">Rural Road</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="damageNote">
+        Damage Description
+        <span class="optional">(optional)</span>
+      </label>
+      <textarea id="damageNote"
+        placeholder="e.g. Large pothole near the school gate, very dangerous at night…"
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <button class="submit-btn" id="submitBtn" onclick="submitComplaint()">
+    Submit Complaint
+  </button>
+
+  <!-- Status Tracker -->
+  <div class="card">
+    <div class="card-title">
+      <div class="step" style="background:var(--gray-700)">?</div>
+      Track Your Complaint
+    </div>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:14px;">
+      Enter the complaint ID you received after submitting.
+    </p>
+    <div class="tracker-row">
+      <input type="text" id="trackInput"
+        placeholder="e.g. 2142bea7-fe00-4552-..." />
+      <button class="track-btn" onclick="trackComplaint()">Track</button>
+    </div>
+    <div class="status-result" id="statusResult"></div>
+  </div>
+
+</div>
+
+<script>
+  const API = "";
+
+  // ── GPS capture on page load ──────────────────────────────────────────────
+  let browserLat = null;
+  let browserLon = null;
+
+  // ── Auto-poll state ───────────────────────────────────────────────────────
+  let pollInterval  = null;
+  let currentPollId = null;
+
+  function startPolling(complaintId) {
+    stopPolling();  // clear any existing interval first
+    currentPollId = complaintId;
+
+    // Poll immediately once, then every 30 seconds
+    pollStatus();
+    pollInterval = setInterval(pollStatus, 30000);
+  }
+
+  function stopPolling() {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+  }
+
+  async function pollStatus() {
+    if (!currentPollId) return;
+    try {
+      const res  = await fetch(`${API}/complaint/${currentPollId}/status`);
+      const data = await res.json();
+      if (!res.ok) return;
+
+      updateLiveStatus(data);
+
+      // Stop polling when complaint reaches a final state
+      if (data.status === "RESOLVED" || data.status === "REJECTED") {
+        stopPolling();
+      }
+    } catch (_) {}
+  }
+
+  function updateLiveStatus(data) {
+    const box = document.getElementById("statusResult");
+    if (!box || !box.classList.contains("show")) return;
+
+    // Update just the status badge without re-rendering the whole tracker
+    const badge = box.querySelector(".status-badge");
+    if (badge) {
+      badge.className = `status-badge ${data.status}`;
+      badge.textContent = data.status;
+    }
+
+    // Show a live pulse indicator
+    const liveTag = document.getElementById("livePulse");
+    if (liveTag) {
+      liveTag.style.display = data.status === "RESOLVED" ? "none" : "inline-flex";
+    }
+  }
+
+  function initGPS() {
+    const bar  = document.getElementById("gpsBar");
+    const dot  = document.getElementById("gpsDot");
+    const text = document.getElementById("gpsText");
+
+    if (!navigator.geolocation) {
+      bar.className  = "gps-bar failed";
+      dot.className  = "gps-dot";
+      text.textContent = "GPS not supported — road type selection will be used";
+      return;
+    }
+
+    bar.className  = "gps-bar acquiring";
+    dot.className  = "gps-dot pulse";
+    text.textContent = "Acquiring your location…";
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        browserLat = pos.coords.latitude;
+        browserLon = pos.coords.longitude;
+        bar.className  = "gps-bar acquired";
+        dot.className  = "gps-dot";
+        text.textContent =
+          `Location acquired — ${browserLat.toFixed(5)}, ${browserLon.toFixed(5)}`;
+      },
+      (err) => {
+        bar.className  = "gps-bar failed";
+        dot.className  = "gps-dot";
+        text.textContent =
+          "Location unavailable — complaint will still be submitted";
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  initGPS();
+
+  // ── Photo upload & preview ────────────────────────────────────────────────
+  const imageInput    = document.getElementById("imageInput");
+  const imagePreview  = document.getElementById("imagePreview");
+  const uploadZone    = document.getElementById("uploadZone");
+  const placeholder   = document.getElementById("uploadPlaceholder");
+  const changeBtn     = document.getElementById("changePhotoBtn");
+
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      alert("Image is too large. Please use a photo under 15MB.");
+      imageInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.src   = e.target.result;
+      imagePreview.style.display = "block";
+      placeholder.style.display  = "none";
+      changeBtn.style.display    = "block";
+      uploadZone.classList.add("has-image");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  changeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    imageInput.click();
+  });
+
+  // ── Submit complaint ──────────────────────────────────────────────────────
+  async function submitComplaint() {
+    const file = imageInput.files[0];
+    if (!file) {
+      alert("Please select a photo of the road damage first.");
+      return;
+    }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner"></div> Processing…`;
+
+    // Hide previous result
+    const resultCard = document.getElementById("resultCard");
+    resultCard.className = "result-card";
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    if (browserLat !== null) formData.append("browser_lat", browserLat);
+    if (browserLon !== null) formData.append("browser_lon", browserLon);
+
+    formData.append("road_type_form", document.getElementById("roadType").value);
+    formData.append("damage_note", document.getElementById("damageNote").value);
+
+    try {
+      const res  = await fetch(`${API}/complaint/submit`, {
+        method: "POST",
+        body:   formData,
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showSuccess(data);
+      } else {
+        showError(data.detail || "Submission failed. Please try again.");
+      }
+    } catch (err) {
+      showError("Cannot reach the server. Make sure the backend is running.");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "Submit Complaint";
+    }
+  }
+
+  function showSuccess(data) {
+    const card = document.getElementById("resultCard");
+    card.className = "result-card success";
+
+    document.getElementById("resultIcon").innerHTML   = "✅";
+    document.getElementById("resultIcon").className   = "result-icon success";
+    document.getElementById("resultTitle").textContent = "Complaint Registered";
+    document.getElementById("resultSub").textContent  =
+      "Your report has been received and is being processed.";
+
+    const priority = data.priority || "—";
+    const pClass   = priority.toLowerCase();
+
+    document.getElementById("resultBody").innerHTML = `
+      <div class="complaint-id-box">
+        <div>
+          <span>Complaint ID</span><br>
+          <code id="copyTarget">${data.complaint_id}</code>
+        </div>
+        <button class="copy-btn" onclick="copyID()">Copy</button>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="label">Priority</div>
+          <div class="value ${pClass}">${priority}</div>
+        </div>
+        <div class="result-item">
+          <div class="label">Authority</div>
+          <div class="value">${data.authority || "—"}</div>
+        </div>
+        <div class="result-item">
+          <div class="label">Resolution SLA</div>
+          <div class="value">${data.sla_days || "—"} days</div>
+        </div>
+        <div class="result-item">
+          <div class="label">Damage Detected</div>
+          <div class="value">${data.damage_detected || "Under review"}</div>
+        </div>
+      </div>
+
+      ${data.address ? `
+        <div class="address-box">
+          <div class="label">Location Verified</div>
+          ${data.address}
+        </div>
+      ` : ""}
+
+      ${data.flags && data.flags.length > 0 ? `
+        <div class="flags">
+          ${data.flags.map(f => `<div class="flag-item">ⓘ ${f}</div>`).join("")}
+        </div>
+      ` : ""}
+    `;
+
+    // Auto-fill tracker with this complaint ID
+    document.getElementById("trackInput").value = data.complaint_id;
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Start auto-polling for this complaint
+    startPolling(data.complaint_id);
+  }
+
+  function showError(message) {
+    const card = document.getElementById("resultCard");
+    card.className = "result-card error";
+
+    document.getElementById("resultIcon").innerHTML  = "❌";
+    document.getElementById("resultIcon").className  = "result-icon error";
+    document.getElementById("resultTitle").textContent = "Submission Failed";
+    document.getElementById("resultSub").textContent   = message;
+    document.getElementById("resultBody").innerHTML    = "";
+
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function copyID() {
+    const id = document.getElementById("copyTarget").textContent;
+    navigator.clipboard.writeText(id).then(() => {
+      const btn = document.querySelector(".copy-btn");
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy", 1500);
+    });
+  }
+
+  // ── Status tracker ────────────────────────────────────────────────────────
+  async function trackComplaint() {
+    const id  = document.getElementById("trackInput").value.trim();
+    const box = document.getElementById("statusResult");
+
+    if (!id) {
+      alert("Please enter a complaint ID.");
+      return;
+    }
+
+    box.className   = "status-result show";
+    box.innerHTML   = "<span style='color:var(--gray-400);font-size:13px'>Fetching status…</span>";
+
+    try {
+      const res  = await fetch(`${API}/complaint/${id}/status`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        box.innerHTML = `<span style='color:var(--red);font-size:13px'>
+          Complaint not found. Check the ID and try again.
+        </span>`;
+        return;
+      }
+
+      const statusColors = {
+        PENDING:     "#92400e",
+        IN_PROGRESS: "#1e40af",
+        RESOLVED:    "#166534",
+        FLAGGED:     "#991b1b",
+      };
+
+      box.innerHTML = `
+        <div class="status-row">
+          <span class="key">Status</span>
+          <span class="val">
+            <span class="status-badge ${data.status}">${data.status}</span>
+          </span>
+        </div>
+        <div class="status-row">
+          <span class="key">Priority</span>
+          <span class="val">${data.priority || "—"}</span>
+        </div>
+        <div class="status-row">
+          <span class="key">Authority</span>
+          <span class="val">${data.authority || "—"}</span>
+        </div>
+        <div class="status-row">
+          <span class="key">Resolution SLA</span>
+          <span class="val">${data.sla_days ? data.sla_days + " days" : "—"}</span>
+        </div>
+        <div class="status-row">
+          <span class="key">Damage Type</span>
+          <span class="val">${data.damage_class || "Under review"}</span>
+        </div>
+        <div class="status-row">
+          <span class="key">Submitted</span>
+          <span class="val">${data.submitted_at
+            ? new Date(data.submitted_at).toLocaleDateString("en-IN", {
+                day:"numeric", month:"short", year:"numeric"
+              })
+            : "—"
+          }</span>
+        </div>
+      `;
+      // Add live pulse indicator if complaint is still open
+        if (data.status !== "RESOLVED" && data.status !== "REJECTED") {
+          box.innerHTML += `
+            <div style="margin-top:10px;display:flex;align-items:center;gap:6px;" id="livePulse">
+              <span style="width:6px;height:6px;border-radius:50%;background:#2563eb;
+                display:inline-block;animation:pulse 1.2s infinite;"></span>
+              <span style="font-size:11px;color:#6b7280;">Live — checking for updates every 30s</span>
+            </div>`;
+          startPolling(data.status !== "RESOLVED" ? currentPollId || data.complaint_id : null);
+        }
+      
+    } catch (err) {
+      box.innerHTML = `<span style='color:var(--red);font-size:13px'>
+        Cannot reach server.
+      </span>`;
+    }
+  }
+
+  // Allow Enter key in tracker input
+  document.getElementById("trackInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") trackComplaint();
+  });
+</script>
+
+</body>
+</html>

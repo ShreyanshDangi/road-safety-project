@@ -1,0 +1,33 @@
+# .gitignore
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Node
+node_modules/
+Module_5/frontend/dist/
+
+# Local test data — images go to Cloudinary in production
+Module_2/uploads/
+Module_2/reports.db
+
+# Training outputs — not needed for deployment
+Module_1/version1_outputs/
+Module_1/BoxF1_curve.png
+Module_1/BoxPR_curve.png
+Module_1/confusion_matrix.png
+Module_1/confusion_matrix_normalized.png
+Module_1/labels.jpg
+Module_1/results.png
+Module_1/val_batch0_*.jpg
+
+# Large files not needed
+*.zip
+*.pptx
+Module_1/weights/last.pt

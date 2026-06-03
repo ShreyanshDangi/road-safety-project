@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 2 — Duplicate Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #f97316;
+    --accent2: #22d3ee;
+    --danger: #f43f5e;
+    --success: #4ade80;
+    --warn: #facc15;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    margin-bottom: 40px;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-badge {
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    letter-spacing: 0.1em;
+  }
+  .logo h1 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  .stat-card.danger::before { background: var(--danger); }
+  .stat-card.success::before { background: var(--success); }
+  .stat-card.warn::before { background: var(--warn); }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  /* ── Main Grid ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── Upload Panel ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .panel-header span { color: var(--accent); }
+
+  .panel-body { padding: 20px; }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(249,115,22,0.04);
+  }
+  .drop-zone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .drop-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .drop-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .drop-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: none;
+    margin-top: 12px;
+  }
+
+  /* Form fields */
+  .field {
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  input[type=text], input[type=number], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+  }
+  .gps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:hover { background: #ea6c0c; }
+  .btn:disabled { background: var(--muted); cursor: not-allowed; }
+  .btn.loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 1s infinite;
+  }
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+
+  /* ── Result Card ── */
+  .result-card {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-card.show { display: block; }
+  .result-header {
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .result-header.genuine { background: rgba(74,222,128,0.1); color: var(--success); }
+  .result-header.duplicate { background: rgba(244,63,94,0.1); color: var(--danger); }
+  .result-body { padding: 16px; }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-key {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .result-val {
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+  .pill {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .pill.genuine { background: rgba(74,222,128,0.15); color: var(--success); }
+  .pill.duplicate { background: rgba(244,63,94,0.15); color: var(--danger); }
+
+  /* ── Reports Table ── */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead {
+    background: var(--bg);
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    vertical-align: middle;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .badge.genuine { background: rgba(74,222,128,0.15); color: var(--success); }
+  .badge.duplicate { background: rgba(244,63,94,0.15); color: var(--danger); }
+  .empty-state {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  /* ── Audit Trail ── */
+  .audit-section { margin-top: 12px; }
+  .audit-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .audit-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .audit-item .flagged { color: var(--danger); }
+  .audit-item .ok { color: var(--success); }
+
+  /* Hamming bar */
+  .hamming-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .hamming-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-badge">MOD 2</div>
+        <h1>Duplicate &amp; Fraud Checker</h1>
+      </div>
+      <div class="status-dot">
+        <div class="dot"></div>
+        <span id="api-status">connecting...</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Reports</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">Genuine</div>
+      <div class="stat-value" id="stat-genuine" style="color:var(--success)">—</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-label">Duplicates</div>
+      <div class="stat-value" id="stat-dupes" style="color:var(--danger)">—</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">Dupe Rate</div>
+      <div class="stat-value" id="stat-rate" style="color:var(--warn)">—</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Upload Panel -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <span>▶</span> Submit Report
+        </div>
+        <div class="panel-body">
+
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*">
+            <span class="drop-icon">📷</span>
+            <div class="drop-text">Drop image or click to upload</div>
+            <img class="drop-preview" id="preview">
+          </div>
+
+          <div class="gps-row">
+            <div class="field">
+              <label>Latitude</label>
+              <input type="number" id="lat" step="0.0001" placeholder="26.9124" value="26.9124">
+            </div>
+            <div class="field">
+              <label>Longitude</label>
+              <input type="number" id="lng" step="0.0001" placeholder="75.7873" value="75.7873">
+            </div>
+          </div>
+
+          <div class="gps-row">
+            <div class="field">
+              <label>Damage Type <span style="color:var(--muted)">(Module 1)</span></label>
+              <select id="damageType">
+                <option value="unknown">unknown</option>
+                <option value="pothole">pothole</option>
+                <option value="crack">longitudinal crack</option>
+                <option value="alligator">alligator crack</option>
+                <option value="rutting">rutting</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Severity <span style="color:var(--muted)">(Module 1)</span></label>
+              <select id="severity">
+                <option value="unknown">unknown</option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn" id="submitBtn" onclick="submitReport()">
+            Run Duplicate Check
+          </button>
+
+          <!-- Result -->
+          <div class="result-card" id="resultCard">
+            <div class="result-header" id="resultHeader"></div>
+            <div class="result-body" id="resultBody"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Reset button -->
+      <button class="btn" style="margin-top:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:10px" onclick="resetDb()">
+        ⚠ Reset Database (Testing)
+      </button>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="panel">
+      <div class="panel-header" style="justify-content:space-between">
+        <div><span>▶</span> All Reports</div>
+        <button onclick="loadReports()" style="background:none;border:none;color:var(--accent);font-family:var(--mono);font-size:11px;cursor:pointer;letter-spacing:0.05em">↻ REFRESH</button>
+      </div>
+      <div class="panel-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Status</th>
+                <th>pHash</th>
+                <th>GPS</th>
+                <th>Hamming</th>
+                <th>GPS Dist</th>
+                <th>Dup Of</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="reportsBody">
+              <tr><td colspan="8" class="empty-state">Submit your first report →</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <br>
+</div>
+
+<script>
+const API = 'http://localhost:8000/api/v1';
+let selectedFile = null;
+
+// ── File Upload ──────────────────────────────────────────────────────────
+const fileInput = document.getElementById('fileInput');
+const preview   = document.getElementById('preview');
+const dropZone  = document.getElementById('dropZone');
+
+fileInput.addEventListener('change', e => {
+  selectedFile = e.target.files[0];
+  if (selectedFile) {
+    preview.src = URL.createObjectURL(selectedFile);
+    preview.style.display = 'block';
+    dropZone.querySelector('.drop-icon').style.display = 'none';
+    dropZone.querySelector('.drop-text').textContent = selectedFile.name;
+  }
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) {
+    selectedFile = f;
+    preview.src = URL.createObjectURL(f);
+    preview.style.display = 'block';
+    dropZone.querySelector('.drop-icon').style.display = 'none';
+    dropZone.querySelector('.drop-text').textContent = f.name;
+  }
+});
+
+// ── Submit Report ────────────────────────────────────────────────────────
+async function submitReport() {
+  if (!selectedFile) { alert('Please select an image first.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = 'Analyzing...';
+
+  const fd = new FormData();
+  fd.append('image', selectedFile);
+  fd.append('latitude',    document.getElementById('lat').value);
+  fd.append('longitude',   document.getElementById('lng').value);
+  fd.append('damage_type', document.getElementById('damageType').value);
+  fd.append('severity',    document.getElementById('severity').value);
+
+  try {
+    const res  = await fetch(`${API}/check-duplicate`, { method: 'POST', body: fd });
+    const data = await res.json();
+    showResult(data);
+    loadStats();
+    loadReports();
+  } catch (e) {
+    alert('API error: ' + e.message + '\n\nMake sure the server is running:\n  uvicorn main:app --reload');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = 'Run Duplicate Check';
+  }
+}
+
+// ── Show Result ──────────────────────────────────────────────────────────
+function showResult(data) {
+  const card   = document.getElementById('resultCard');
+  const header = document.getElementById('resultHeader');
+  const body   = document.getElementById('resultBody');
+
+  const isDup = data.status === 'duplicate';
+  card.classList.add('show');
+
+  header.className = `result-header ${data.status}`;
+  header.innerHTML = `
+    ${isDup ? '🚩' : '✅'}
+    <span>${isDup ? 'DUPLICATE DETECTED' : 'GENUINE REPORT'}</span>
+    <span class="pill ${data.status}" style="margin-left:auto">#${data.new_report_id}</span>
+  `;
+
+  let html = `
+    <div class="result-row">
+      <span class="result-key">Status</span>
+      <span class="result-val" style="color:${isDup ? 'var(--danger)' : 'var(--success)'}">${data.status.toUpperCase()}</span>
+    </div>
+    <div class="result-row">
+      <span class="result-key">pHash</span>
+      <span class="result-val" style="font-size:10px">${data.phash}</span>
+    </div>
+  `;
+
+  if (isDup) {
+    const simColor = data.similarity_pct > 90 ? 'var(--danger)' : data.similarity_pct > 70 ? 'var(--warn)' : 'var(--success)';
+    html += `
+      <div class="result-row">
+        <span class="result-key">Duplicate Of</span>
+        <span class="result-val" style="color:var(--accent)">Report #${data.duplicate_of}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Hamming Distance</span>
+        <span class="result-val">${data.hamming_distance} / 64</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Image Similarity</span>
+        <span class="result-val" style="color:${simColor}">${data.similarity_pct}%</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">GPS Distance</span>
+        <span class="result-val">${data.gps_distance_m}m</span>
+      </div>
+    `;
+  }
+
+  html += `<div class="result-row"><span class="result-key">Message</span><span class="result-val" style="font-size:11px;max-width:200px;text-align:right">${data.message}</span></div>`;
+
+  // Audit trail
+  if (data.checks && data.checks.length > 0) {
+    html += `<div class="audit-section"><div class="audit-title">Comparison Audit Trail</div>`;
+    data.checks.forEach(c => {
+      const pct = ((1 - c.hamming_distance/64)*100).toFixed(1);
+      const fillW = pct + '%';
+      const fillColor = c.flagged_as_duplicate ? 'var(--danger)' : c.hamming_distance <= 20 ? 'var(--warn)' : 'var(--success)';
+      html += `
+        <div class="audit-item">
+          <span>vs Report #${c.compared_with_report_id}</span>
+          <span class="${c.flagged_as_duplicate ? 'flagged' : 'ok'}">${c.flagged_as_duplicate ? '🚩 DUPLICATE' : '✓ PASS'}</span>
+          <span>Hamming: ${c.hamming_distance}</span>
+          <span>GPS: ${c.gps_distance_m}m</span>
+          <div style="grid-column:1/-1">
+            <div class="hamming-bar"><div class="hamming-fill" style="width:${fillW};background:${fillColor}"></div></div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+// ── Load Stats ───────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res  = await fetch(`${API}/stats`);
+    const data = await res.json();
+    document.getElementById('stat-total').textContent   = data.total_reports;
+    document.getElementById('stat-genuine').textContent = data.genuine_reports;
+    document.getElementById('stat-dupes').textContent   = data.duplicate_reports;
+    document.getElementById('stat-rate').textContent    = data.duplicate_rate_pct + '%';
+    document.getElementById('api-status').textContent   = 'API online';
+  } catch {
+    document.getElementById('api-status').textContent = 'API offline';
+  }
+}
+
+// ── Load Reports Table ───────────────────────────────────────────────────
+async function loadReports() {
+  try {
+    const res  = await fetch(`${API}/reports`);
+    const data = await res.json();
+    const body = document.getElementById('reportsBody');
+
+    if (!data.reports || data.reports.length === 0) {
+      body.innerHTML = '<tr><td colspan="8" class="empty-state">No reports yet. Submit one above →</td></tr>';
+      return;
+    }
+
+    body.innerHTML = data.reports.map(r => {
+      const isDup = r.is_duplicate === 1;
+      const ts    = r.created_at ? r.created_at.substring(0, 16) : '—';
+      return `
+        <tr>
+          <td style="color:var(--accent)">#${r.id}</td>
+          <td><span class="badge ${isDup ? 'duplicate' : 'genuine'}">${isDup ? 'DUPE' : 'GENUINE'}</span></td>
+          <td style="font-size:10px;color:var(--muted)">${r.phash ? r.phash.substring(0,10)+'...' : '—'}</td>
+          <td style="font-size:10px">${r.latitude?.toFixed(4)}, ${r.longitude?.toFixed(4)}</td>
+          <td>${r.hamming_dist !== null ? r.hamming_dist : '—'}</td>
+          <td>${r.gps_dist_m !== null ? r.gps_dist_m + 'm' : '—'}</td>
+          <td>${r.duplicate_of ? '#' + r.duplicate_of : '—'}</td>
+          <td style="color:var(--muted);font-size:10px">${ts}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch (e) {
+    console.error('Failed to load reports:', e);
+  }
+}
+
+// ── Reset DB ─────────────────────────────────────────────────────────────
+async function resetDb() {
+  if (!confirm('Delete all reports from the database?')) return;
+  await fetch(`${API}/reset`, { method: 'POST' });
+  document.getElementById('resultCard').classList.remove('show');
+  loadStats();
+  loadReports();
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+loadStats();
+loadReports();
+setInterval(loadStats, 10000);
+</script>
+</body>
+</html>
