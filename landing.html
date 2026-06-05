@@ -163,19 +163,19 @@
   </p> 
 
   <div class="cards">
-    <a class="card" href="/citizen">
-      <div class="card-icon citizen">📍</div>
-      <h2>Citizen Portal</h2>
-      <p>Report road damage with photo and GPS. Track your complaint status in real time.</p>
-      <div class="card-arrow">→</div>
-    </a>
+    <div class="card" onclick="navigate('/citizen')">
+    <div class="card-icon citizen">📍</div>
+    <h2>Citizen Portal</h2>
+    <p>Report road damage with photo and GPS. Track your complaint status in real time.</p>
+    <div class="card-arrow">→</div>
+  </div>
 
-    <a class="card" href="/authority">
-      <div class="card-icon authority">👮🏼‍♂️</div>
-      <h2>Authority Dashboard</h2>
-      <p>View damage heatmap, manage complaints, and verify repairs with AI assistance.</p>
-      <div class="card-arrow">→</div>
-    </a>
+  <div class="card" onclick="navigate('/authority')">
+    <div class="card-icon authority">🗺️</div>
+    <h2>Authority Dashboard</h2>
+    <p>View damage heatmap, manage complaints, and verify repairs with AI assistance.</p>
+    <div class="card-arrow">→</div>
+    </div>
   </div>
 
   <div class="modules">
@@ -192,5 +192,20 @@
     <a href="/docs" target="_blank">API Documentation</a>
   </p>
 
+  <script>
+    function getBaseUrl() {
+      const host = window.location.hostname;
+      // When on HF platform, use direct space URL
+      if (host === 'huggingface.co') {
+        return 'https://aayush814-road-safety-project.hf.space';
+      }
+      // Local development or direct HF space URL — use current origin
+      return window.location.origin;
+    }
+
+    function navigate(path) {
+      window.location.href = getBaseUrl() + path;
+    }
+  </script>
 </body>
 </html>

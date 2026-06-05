@@ -175,9 +175,13 @@ function LoginScreen({ onLogin }) {
         </form>
         <p className="text-xs text-gray-400 text-center mt-6">
           Citizen complaint portal →{" "}
-          <a href="http://localhost:8000/citizen" target="_blank" rel="noreferrer"
-            className="text-blue-500 hover:underline">
-            localhost:8000/citizen
+          <a href={window.location.hostname === 'huggingface.co'
+            ? 'https://aayush814-road-safety-project.hf.space/citizen'
+            : '/citizen'}
+            target="_blank"
+            className="text-blue-500 hover:underline"
+          >
+            Citizen Portal →     
           </a>
         </p>
       </div>
