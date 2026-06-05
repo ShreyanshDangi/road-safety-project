@@ -10,8 +10,8 @@ import "./index.css";
 
 // ── API helpers ──────────────────────────────────────────────────────────────
 //(relative — works at any domain):
-const API         = "/api";
-const AUTH_API    = "";
+const API      = "/api";
+const AUTH_API = "";
 const MODULE4_API = "";
 
 // Token helpers

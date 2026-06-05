@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Road Safety System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2340 50%, #1a3a2a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: white;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .logo {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(37,99,235,0.4);
+    }
+
+    .logo svg { width: 36px; height: 36px; }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      max-width: 480px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 680px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 540px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-decoration: none;
+      color: white;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.25);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
+
+    .card-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .card-icon.citizen  { background: rgba(16,185,129,0.2); }
+    .card-icon.authority { background: rgba(59,130,246,0.2); }
+
+    .card h2 { font-size: 18px; font-weight: 600; }
+    .card p  { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+
+    .card-arrow {
+      margin-top: auto;
+      font-size: 20px;
+      color: rgba(255,255,255,0.3);
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .card:hover .card-arrow { color: white; transform: translateX(4px); }
+
+    .modules {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 600px;
+      margin-bottom: 32px;
+    }
+
+    .module-tag {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .footer {
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+    }
+
+    .footer a { color: rgba(255,255,255,0.5); text-decoration: none; }
+    .footer a:hover { color: white; }
+  </style>
+</head>
+<body>
+
+  <div class="badge">AI-Powered Civic Infrastructure</div>
+
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+    </svg>
+  </div>
+
+  <h1>Road Safety<br/>Management System</h1>
+
+  <p class="subtitle">
+    End-to-end AI pipeline for road damage reporting, intelligent priority routing,
+    and repair verification — powered by YOLOv8, DBSCAN, and Random Forest.
+  </p>
+
+  <div class="cards">
+    <a class="card" href="/citizen">
+      <div class="card-icon citizen">📍</div>
+      <h2>Citizen Portal</h2>
+      <p>Report road damage with photo and GPS. Track your complaint status in real time.</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="card" href="/authority">
+      <div class="card-icon authority">🗺️</div>
+      <h2>Authority Dashboard</h2>
+      <p>View damage heatmap, manage complaints, and verify repairs with AI assistance.</p>
+      <div class="card-arrow">→</div>
+    </a>
+  </div>
+
+  <div class="modules">
+    <span class="module-tag">Module 0 — GPS Validation</span>
+    <span class="module-tag">Module 1 — YOLOv8 Detection</span>
+    <span class="module-tag">Module 2 — Duplicate Checker</span>
+    <span class="module-tag">Module 3 — Smart Router</span>
+    <span class="module-tag">Module 4 — Repair Verifier</span>
+    <span class="module-tag">Module 5 — DBSCAN Dashboard</span>
+  </div>
+
+  <p class="footer">
+    Built with FastAPI · React · PostgreSQL · Cloudinary<br/>
+    <a href="/docs" target="_blank">API Documentation</a>
+  </p>
+
+</body>
+</html>

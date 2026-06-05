@@ -85,11 +85,11 @@ app.include_router(dashboard_router)
 import os
 REACT_BUILD = "Module_5/frontend/dist"
 if os.path.exists(REACT_BUILD):
-    app.mount(
-        "/dashboard",
-        StaticFiles(directory=REACT_BUILD, html=True),
-        name="dashboard"
-    )
+   app.mount(
+    "/authority",
+    StaticFiles(directory=REACT_BUILD, html=True),
+    name="authority"
+   )
 
 # Serve citizen portal
 @app.get("/citizen")
@@ -99,7 +99,7 @@ def citizen_portal():
 # Redirect root to login
 @app.get("/")
 def root():
-    return FileResponse("citizen.html")
+    return FileResponse("landing.html")
 
 # ── Auth dependency ───────────────────────────────────────────────────────────
 _bearer = HTTPBearer()
