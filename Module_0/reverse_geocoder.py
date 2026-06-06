@@ -79,8 +79,8 @@ def reverse_geocode(lat: float, lon: float) -> dict:
         result["flag_reason"] = f"Coordinates resolve to nothing: {data['error']}"
         return result
 
-    address_block = data.get("address",   {})
-    extratags     = data.get("extratags", {})
+    address_block = data.get("address") or {}
+    extratags = data.get("extratags") or {}
 
     # ── Country check ─────────────────────────────────────────────────────────
     country_code = address_block.get("country_code", "").lower()
@@ -94,7 +94,7 @@ def reverse_geocode(lat: float, lon: float) -> dict:
 
     # ── Location type sanity ──────────────────────────────────────────────────
     # addresstype tells you what the closest feature is
-    location_type = data.get("addresstype", "")
+    location_type = data.get("addresstype") or ""
     if location_type in ("water", "natural", "boundary", "forest"):
         result["flag_reason"] = (
             f"Coordinates fall on '{location_type}', not a road"
