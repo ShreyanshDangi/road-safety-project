@@ -132,11 +132,23 @@ def get_clusters(
     status:    Optional[str] = Query(None),
 ):
     data = get_all_genuine_complaints()
+    
+    # --- ADD THIS SANITIZATION BLOCK ---
+    for item in data:
+        # Force lat/lon to be valid floats, default to 0.0 if NaN/Inf
+        lat = item.get("lat")
+        lon = item.get("lon")
+        item["lat"] = float(lat) if (isinstance(lat, (int, float)) and math.isfinite(lat)) else 0.0
+        item["lon"] = float(lon) if (isinstance(lon, (int, float)) and math.isfinite(lon)) else 0.0
+    # -----------------------------------
+
     if priority:  data = [d for d in data if d.get("priority")  == priority]
     if authority: data = [d for d in data if d.get("authority") == authority]
     if status:    data = [d for d in data if d.get("status")    == status]
+    
     if not data:
         return {"clusters": [], "noise": [], "params": {"eps": eps, "min_pts": min_pts}}
+        
     df     = pd.DataFrame(data)
     result = run_dbscan_clustering(df, eps_meters=eps, min_samples=min_pts)
     result["params"] = {"eps": eps, "min_pts": min_pts, "total_input": len(data)}
