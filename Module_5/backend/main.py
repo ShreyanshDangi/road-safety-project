@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
 import io
+import math
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
 
