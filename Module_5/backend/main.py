@@ -34,10 +34,16 @@ def require_auth(
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
+import math
+import numpy as np
+
 def run_dbscan_clustering(df, eps_meters=50.0, min_samples=2):
     if df.empty:
         return {"clusters": [], "noise": []}
 
+    # 1. Clean the input DataFrame of NaNs before processing
+    df = df.fillna(0.0) 
+    
     coords  = df[["lat", "lon"]].values
     eps_rad = eps_meters / 6_371_000
 
@@ -51,36 +57,35 @@ def run_dbscan_clustering(df, eps_meters=50.0, min_samples=2):
 
     clusters = []
     for cid in sorted(df["cluster_id"].unique()):
-        if cid == -1:
-            continue
+        if cid == -1: continue
         group   = df[df["cluster_id"] == cid]
-        n       = len(group)
-        density = "high" if n >= 5 else "medium" if n >= 3 else "low"
         
-        # Calculate means safely
-        lat_mean = group["lat"].mean()
-        lon_mean = group["lon"].mean()
-        
-        # Sanitize: convert NaN/Inf to standard 0.0 floats
-        safe_lat = float(lat_mean) if math.isfinite(lat_mean) else 0.0
-        safe_lon = float(lon_mean) if math.isfinite(lon_mean) else 0.0
-        
+        # Helper to ensure float compatibility
+        def to_json_float(val):
+            val = float(val)
+            return val if math.isfinite(val) else 0.0
+
         clusters.append({
-            "cluster_id":      int(cid),
-            "count":           int(n),
-            "density":         density,
-            "centroid_lat":    safe_lat,
-            "centroid_lon":    safe_lon,
+            "cluster_id":    int(cid),
+            "count":         int(len(group)),
+            "density":       "high" if len(group) >= 5 else "medium" if len(group) >= 3 else "low",
+            "centroid_lat":  to_json_float(group["lat"].mean()),
+            "centroid_lon":  to_json_float(group["lon"].mean()),
             "priority_counts": group["priority"].value_counts().to_dict(),
-            "authorities":     group["authority"].value_counts().to_dict(),
-            "dominant_city":   str(group["city"].mode().iloc[0]) if not group["city"].isna().all() else "",
-            "statuses":        group["status"].value_counts().to_dict(),
-            "members":         group["complaint_id"].tolist(),
+            "authorities":   group["authority"].value_counts().to_dict(),
+            "dominant_city": str(group["city"].mode().iloc[0]) if not group["city"].isna().all() else "",
+            "statuses":      group["status"].value_counts().to_dict(),
+            "members":       group["complaint_id"].tolist(),
         })
 
-    # Sanitize noise records as well to be safe
-    noise = df[df["cluster_id"] == -1].to_dict(orient="records")
-    return {"clusters": clusters, "noise": noise}
+    # 2. Sanitize noise: Replace NaNs in the dictionary records
+    noise_records = df[df["cluster_id"] == -1].to_dict(orient="records")
+    for record in noise_records:
+        for k, v in record.items():
+            if isinstance(v, float) and not math.isfinite(v):
+                record[k] = 0.0
+                
+    return {"clusters": clusters, "noise": noise_records}
 
 
 @router.get("/stats", dependencies=[Depends(require_auth)])
