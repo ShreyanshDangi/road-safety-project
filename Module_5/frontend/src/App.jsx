@@ -1023,11 +1023,12 @@ export function HeatmapDashboard({ username, onLogout }) {
               {complaints
                 .sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
                 .map(item => (
-                  <ComplaintRow
-                    key={item.complaint_id}
-                    item={item}
-                    onOpen={(c) => setSelectedComplaint(c)}
-                  />
+                  <div key={item.complaint_id} className="shrink-0">
+                    <ComplaintRow
+                      item={item}
+                      onOpen={(c) => setSelectedComplaint(c)}
+                    />
+                  </div>
                 ))
               }
               {complaints.length === 0 && !loading && (
