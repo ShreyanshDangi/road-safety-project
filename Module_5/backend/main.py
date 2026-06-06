@@ -55,19 +55,29 @@ def run_dbscan_clustering(df, eps_meters=50.0, min_samples=2):
         group   = df[df["cluster_id"] == cid]
         n       = len(group)
         density = "high" if n >= 5 else "medium" if n >= 3 else "low"
+        
+        # Calculate means safely
+        lat_mean = group["lat"].mean()
+        lon_mean = group["lon"].mean()
+        
+        # Sanitize: convert NaN/Inf to standard 0.0 floats
+        safe_lat = float(lat_mean) if math.isfinite(lat_mean) else 0.0
+        safe_lon = float(lon_mean) if math.isfinite(lon_mean) else 0.0
+        
         clusters.append({
             "cluster_id":      int(cid),
-            "count":           n,
+            "count":           int(n),
             "density":         density,
-            "centroid_lat":    float(group["lat"].mean()),
-            "centroid_lon":    float(group["lon"].mean()),
+            "centroid_lat":    safe_lat,
+            "centroid_lon":    safe_lon,
             "priority_counts": group["priority"].value_counts().to_dict(),
             "authorities":     group["authority"].value_counts().to_dict(),
-            "dominant_city":   group["city"].mode().iloc[0] if not group["city"].isna().all() else "",
+            "dominant_city":   str(group["city"].mode().iloc[0]) if not group["city"].isna().all() else "",
             "statuses":        group["status"].value_counts().to_dict(),
             "members":         group["complaint_id"].tolist(),
         })
 
+    # Sanitize noise records as well to be safe
     noise = df[df["cluster_id"] == -1].to_dict(orient="records")
     return {"clusters": clusters, "noise": noise}
 
